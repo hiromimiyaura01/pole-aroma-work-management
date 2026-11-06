@@ -2,3 +2,7 @@
 [build]
   base = "web"
   command = "npm run build"
+
+# 手元で確かめた Node.js の版(22)にそろえる
+[build.environment]
+  NODE_VERSION = "22"
