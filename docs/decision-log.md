@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-11-06 Next.js で確定/公開する場所は Netlify(無料プラン)/Supabase は東京
+
+- **決めたこと**:
+  - 画面とアプリ本体は **Next.js** で作る(10 の「例:Next.js」を確定)。
+  - アプリを公開する場所は **Netlify の無料プラン**。
+  - Supabase のプロジェクトは **東京(ap-northeast-1)** に置く。
+  - 持っているドメイン(polearoma.com)で開けるようにするのは、後で行う。
+- **選ばなかった選択肢**:
+  - Vercel の無料プラン:【事実】規約で「個人の、商用でない利用」に限られている。POLE AROMA の業務の道具は商用にあたる可能性がある。
+  - Vercel の有料プラン(月 $20):MVP の段階で毎月の費用を増やしたくない。
+  - Cloudflare の無料プラン:【事実】アプリの大きさが圧縮後 3MB まで。【推測】Next.js+Supabase+Claude API の組み合わせで上限に当たると、作り方を変える手間が出る。
+  - さくらのサーバ(ひろみが契約中):【推測】共用のレンタルサーバでは Next.js のアプリを常に動かしておけない。VPS ならできるが、サーバの手入れの負担が大きい。
+- **理由**:【事実】Netlify は公式ブログで、無料プランでも商用のプロジェクトを置けるとしている。Next.js をそのまま置ける。
+- **補足**:Supabase は最初、大きな地域(Asia-Pacific)を選んだらシンガポールになったので、中身が空のうちに東京で作り直した。
+- **出典**(確認日 2026-11-06):
+  - Vercel Fair use guidelines https://vercel.com/docs/limits/fair-use-guidelines
+  - OpenNext Cloudflare https://opennext.js.org/cloudflare
+  - Netlify Blog「Introducing Netlify Free plan」https://netlify.com/blog/introducing-netlify-free-plan
+- **ステータス**:決定(ひろみ)。
+
 ## 2026-11-06 実装フェーズを始める/実装の順番は「確認の計算」を写真の読み取りより先にする
 
 - **決めたこと**:
