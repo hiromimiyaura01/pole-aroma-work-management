@@ -1,0 +1,4 @@
+# Netlify の設定:アプリ本体は web/ フォルダにある
+[build]
+  base = "web"
+  command = "npm run build"
