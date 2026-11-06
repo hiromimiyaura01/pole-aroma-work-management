@@ -16,3 +16,15 @@ npm run dev
 
 - Supabase・Claude API のキーは **リポジトリに入れない**。
 - 手元では `web/.env.local`(Git に入らない)、公開版では Netlify の設定画面の「Environment variables」に入れる。
+
+使うキーの名前:
+
+| 名前 | 中身 | 取り出す場所 |
+|---|---|---|
+| `SUPABASE_URL` | Supabase のプロジェクトの URL | Supabase の Project Settings → Data API |
+| `SUPABASE_PUBLISHABLE_KEY` | Supabase の publishable key(`sb_publishable_...`) | Supabase の Project Settings → API Keys |
+
+## ログイン
+
+- Supabase の「メール+パスワード」を使う。利用者はひろみ1人で、新規登録はできない設定にする。
+- ログインしていないと、どの画面を開いてもログイン画面に移る(`src/proxy.ts`)。
