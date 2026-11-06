@@ -9,3 +9,7 @@
 # 手元で確かめた Node.js の版(22)にそろえる
 [build.environment]
   NODE_VERSION = "22"
+
+# Next.js を Netlify で動かすための仕組み(サーバー側の処理・ログインの門番を動かす)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
