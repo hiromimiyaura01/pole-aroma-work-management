@@ -1,0 +1,15 @@
+# Netlify の設定:アプリ本体は web/ フォルダにある
+# (この設定は、Netlify の画面の Build settings より優先される)
+[build]
+  base = "web"
+  command = "npm run build"
+  # 組み立てた結果の置き場所。base(web/)から見た場所で書く
+  publish = ".next"
+
+# 手元で確かめた Node.js の版(22)にそろえる
+[build.environment]
+  NODE_VERSION = "22"
+
+# Next.js を Netlify で動かすための仕組み(サーバー側の処理・ログインの門番を動かす)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
