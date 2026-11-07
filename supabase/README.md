@@ -17,6 +17,8 @@
    - `checks/ifra_51_checks.sql`:全体を貼って1回 Run。全項目が OK/★要確認 で1つの表に出る
    - `checks/ifra_51_checks_step_by_step.sql`:①〜⑤を1つずつ選んで Run し、「期待」と見比べる(中身を理解しながら確かめたいとき)
    - 注:SQL Editor は、いくつかの SQL を一度に実行すると、最後の1つの結果しか表示しない
+4. 全件の突き合わせ:`checks/ifra_51_verify_all.sql` を貼って1回 Run。「食い違い 0件」の1行だけが出れば、Excel とデータベースが全件一致
+   - 取り込み(`tools/ifra/build_seed.py`)とは別の方法で Excel を読んで作った SQL(`tools/ifra/build_verify.py`)
 
 ## seed/ のデータの作り方(再現手順)
 
