@@ -13,7 +13,10 @@
    1. `migrations/20261106000001_ifra.sql`(表を作る)
    2. `seed/ifra_51_1_standards.sql`(基準と上限)
    3. `seed/ifra_51_2_annex.sql`(Annex と例外表)
-3. `checks/ifra_51_checks.sql` を貼って「Run」し、各結果が「期待」と同じか見る
+3. 確認(どちらか)
+   - `checks/ifra_51_checks.sql`:全体を貼って1回 Run。全項目が OK/★要確認 で1つの表に出る
+   - `checks/ifra_51_checks_step_by_step.sql`:①〜⑤を1つずつ選んで Run し、「期待」と見比べる(中身を理解しながら確かめたいとき)
+   - 注:SQL Editor は、いくつかの SQL を一度に実行すると、最後の1つの結果しか表示しない
 
 ## seed/ のデータの作り方(再現手順)
 
