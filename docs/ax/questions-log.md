@@ -255,6 +255,10 @@
   - 例外の5件(See Notebox)は、2. の形。成分そのものは使用禁止だが、精油などから入る分は完成品中 0.01%(Isophorone は 0.0013%)まで、という注記だった。
   - 089(柑橘)は、1. と 2. が混ざった形。5-MOP の量が分からなければ、精油ごとの上限(1.)を使い、光毒性の精油どうしは「上限に対する割合」を足し算する。
 
+### Q27. SQL Editor はどのサービスにあるか
+- **ひろみの質問**:「sql editorのサービスってどれだったっけ」
+- **答えの要点**:Supabase の中。プロジェクト `pole-aroma-work-management` を開き、左のメニューの「SQL Editor」→「New query」。SQL のファイルは GitHub で開いて「Copy raw file」でコピーし、Supabase の SQL Editor に貼って Run する(ツールの地図も参照)。
+
 ---
 
 ## 用語集
