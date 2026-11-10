@@ -45,7 +45,7 @@ with checks(番号, 確認すること, 結果, 期待) as (
          (select count(*)::text from ifra_review_items where amendment = 51 and item_type = 'limit' and category = '11B'), '6'
   union all select '⑤-2', '例外表:Annex の値・結びつき',
          (select count(*)::text from ifra_review_items where amendment = 51 and item_type in ('annex_value', 'annex_mapping')), '2'
-  union all select '⑤-3', '例外表:まだ確認していない(pending)',
+  union all select '⑤-3', '例外表:まだ確認していない(pending)※取り込み直後の値。例外表を決めたあとは 2',
          (select count(*)::text from ifra_review_items where amendment = 51 and status = 'pending'), '8'
 )
 select 番号, 確認すること, 結果, 期待,
