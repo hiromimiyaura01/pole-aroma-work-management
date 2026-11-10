@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AMENDMENT, KIND_LABELS } from "@/lib/oils";
+import { AMENDMENT, EXTRACTION_METHODS, KIND_LABELS, PLANT_PARTS } from "@/lib/oils";
 
 function text(formData: FormData, key: string): string | null {
   const v = String(formData.get(key) ?? "").trim();
@@ -12,12 +12,14 @@ function text(formData: FormData, key: string): string | null {
 
 function oilFields(formData: FormData) {
   const kind = String(formData.get("kind") ?? "essential_oil");
+  const parts = formData.getAll("plant_part").map(String).filter((p) => PLANT_PARTS.includes(p));
+  const method = text(formData, "extraction_method");
   return {
     name: text(formData, "name") ?? "",
     botanical_name: text(formData, "botanical_name"),
     kind: kind in KIND_LABELS ? kind : "other",
-    plant_part: text(formData, "plant_part"),
-    extraction_method: text(formData, "extraction_method"),
+    plant_part: parts.length > 0 ? parts : null,
+    extraction_method: method && EXTRACTION_METHODS.includes(method) ? method : null,
     brand: text(formData, "brand"),
     memo: text(formData, "memo"),
   };

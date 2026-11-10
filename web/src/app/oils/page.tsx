@@ -34,6 +34,7 @@ async function OilList({ searchParams }: Pick<PageProps<"/oils">, "searchParams"
               <span className="font-medium">{oil.name}</span>
               <span className="text-xs text-gray-500">
                 {oil.botanical_name ?? "学名なし"}・{KIND_LABELS[oil.kind] ?? oil.kind}
+                {oil.plant_part && oil.plant_part.length > 0 && `・${oil.plant_part.join("・")}`}
                 {oil.extraction_method && `・${oil.extraction_method}`}
               </span>
               <span className="flex flex-wrap gap-1">

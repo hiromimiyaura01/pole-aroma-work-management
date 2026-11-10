@@ -42,3 +42,4 @@ python3 -I tools/ifra/build_seed.py <一覧表.xlsx> <Annex.xlsx> supabase/seed
 
 1. `migrations/20261110000002_essential_oils.sql`(精油・Annex との結びつき・基準との結びつきの表と、一覧用のビュー)
 - 精油のデータは、アプリの画面(/oils)から登録する。処方のデータと同じく、リポジトリには入れない。
+2. `migrations/20261110000003_grants_and_oil_fields.sql`(アプリが表を使うための権限 GRANT と、抽出部位を複数選べる形に変える)

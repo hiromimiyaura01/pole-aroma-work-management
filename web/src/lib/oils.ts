@@ -10,6 +10,17 @@ export const KIND_LABELS: Record<string, string> = {
   other: "そのほか",
 };
 
+// 抽出部位(複数選べる)
+export const PLANT_PARTS = [
+  "花", "蕾", "葉", "枝", "茎", "全草", "果皮", "果実", "種子",
+  "根", "根茎", "樹皮", "木部", "樹脂", "苔", "そのほか",
+];
+
+// 抽出方法(1つ選ぶ)
+export const EXTRACTION_METHODS = [
+  "水蒸気蒸留", "圧搾", "溶剤抽出", "CO2 抽出", "水蒸気蒸留(精留)", "そのほか", "不明",
+];
+
 export const MATCH_LABELS: Record<string, string> = {
   exact: "一致",
   approx: "近似",
@@ -21,7 +32,7 @@ export type Oil = {
   name: string;
   botanical_name: string | null;
   kind: string;
-  plant_part: string | null;
+  plant_part: string[] | null;
   extraction_method: string | null;
   brand: string | null;
   memo: string | null;

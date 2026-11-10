@@ -1,4 +1,4 @@
-import { KIND_LABELS, type Oil } from "@/lib/oils";
+import { EXTRACTION_METHODS, KIND_LABELS, PLANT_PARTS, type Oil } from "@/lib/oils";
 import { Field, inputClass, buttonClass } from "./ui";
 
 // 精油の基本情報の入力欄(新規登録と編集で共通)
@@ -29,14 +29,33 @@ export function OilForm({
           ))}
         </select>
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="抽出部位" hint="例:花、果皮、葉">
-          <input name="plant_part" defaultValue={oil?.plant_part ?? ""} className={inputClass} />
-        </Field>
-        <Field label="抽出方法" hint="例:水蒸気蒸留、圧搾">
-          <input name="extraction_method" defaultValue={oil?.extraction_method ?? ""} className={inputClass} />
-        </Field>
-      </div>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">抽出部位(複数選べます)</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {PLANT_PARTS.map((part) => (
+            <label key={part} className="flex items-center gap-1 text-sm">
+              <input
+                type="checkbox"
+                name="plant_part"
+                value={part}
+                defaultChecked={oil?.plant_part?.includes(part) ?? false}
+                className="h-4 w-4"
+              />
+              {part}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <Field label="抽出方法" hint="柑橘は、圧搾か蒸留かで光毒性の扱いが変わります">
+        <select name="extraction_method" defaultValue={oil?.extraction_method ?? ""} className={inputClass}>
+          <option value="">(選ぶ)</option>
+          {EXTRACTION_METHODS.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field label="ブランド(任意)">
         <input name="brand" defaultValue={oil?.brand ?? ""} className={inputClass} />
       </Field>
