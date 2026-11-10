@@ -31,3 +31,9 @@ python3 -I tools/ifra/build_seed.py <一覧表.xlsx> <Annex.xlsx> supabase/seed
 - 出典の URL と、取り込んだファイルの指紋(sha256)は `ifra_amendments` 表に残る。
 - 整え方のルールは `tools/ifra/build_seed.py` の `normalize_limit()` / `normalize_annex_value()`。
 - 【注意】seed/ のデータは IFRA の著作物から作ったもの。リポジトリを公開する前に扱いを確かめる(CLAUDE.md)。
+
+## 例外表(11B の6件)の決定の取り込み(2026-11-10)
+
+1. `migrations/20261110000001_ifra_review_decisions.sql`(足し算のグループの表と、11B の「使う上限」のビュー)
+2. `seed/ifra_51_3_review_decisions.sql`(6件の決定と、柑橘のグループの8つの精油)
+3. 確認:`checks/ifra_51_review_checks.sql` を貼って1回 Run。「判定」が全部 OK なら期待どおり
