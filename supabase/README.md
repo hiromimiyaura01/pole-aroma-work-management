@@ -37,3 +37,14 @@ python3 -I tools/ifra/build_seed.py <一覧表.xlsx> <Annex.xlsx> supabase/seed
 1. `migrations/20261110000001_ifra_review_decisions.sql`(足し算のグループの表と、11B の「使う上限」のビュー)
 2. `seed/ifra_51_3_review_decisions.sql`(6件の決定と、柑橘のグループの8つの精油)
 3. 確認:`checks/ifra_51_review_checks.sql` を貼って1回 Run。「判定」が全部 OK なら期待どおり
+
+## 精油の登録(R5・R9)の表(2026-11-10)
+
+1. `migrations/20261110000002_essential_oils.sql`(精油・Annex との結びつき・基準との結びつきの表と、一覧用のビュー)
+- 精油のデータは、アプリの画面(/oils)から登録する。処方のデータと同じく、リポジトリには入れない。
+2. `migrations/20261110000003_grants_and_oil_fields.sql`(アプリが表を使うための権限 GRANT と、抽出部位を複数選べる形に変える)
+
+## 二重登録の防止(2026-11-14)
+
+1. `migrations/20261114000001_oil_submission_token.sql`(精油に「この1回の登録の番号」の列と、同じ番号は1件だけの決まりを足す)
+- 片付け(1回だけ):`maintenance/2026-11-14_dedupe_oils_1_check.sql` で消える予定を確認 → `maintenance/2026-11-14_dedupe_oils_2_delete.sql` で消す
