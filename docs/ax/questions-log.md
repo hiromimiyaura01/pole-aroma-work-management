@@ -317,7 +317,7 @@
   - 【事実】IFRA には、天然の香料の名前のつけ方を説明したページがある(IFRA Transparency List の「Nomenclature for natural complex substances」。https://ifrafragrance.org/transparency-list/about-the-ifra-transparency-list/nomenclature-for-natural-complex-substances-on-the-ifra-transparency-list 。検索で見つけただけで、中身はまだ読んでいない。確認日 2026-11-14)。
   - 【推測】CAS 番号で調べると、その精油の説明(部位・主成分)が見つかることがある。ただし、ケモタイプまで公式に書いてある一覧は見つかっていない。いちばん確かな手がかりは、**Annex に載っている規制成分の中身**(選ぶ画面に出ている)と、**自分の精油の成分表・商品ページ** を見比べること。
   - 【事実】ユーカリは、Annex に Eucalyptus citriodora oil(シトロネラール 71.77% など)・Eucalyptus dives oil・Eucalyptus radiata oil の3つだけ。**グロブルスは載っていない**。
-- **残ったこと**:選ぶ画面に、精油の CAS 番号を出すか(未定)。
+- **決めたこと**:選ぶ画面に CAS 番号は出さない(今のまま)。ひろみ「わからないときに調べることはできそうだし、CASが必要な頻度がまだ不明だから」。必要な場面が増えたら見直す。
 
 ## 用語集
 
