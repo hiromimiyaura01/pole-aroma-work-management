@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AMENDMENT, MATCH_LABELS, cleanSearch, type OilStatus } from "@/lib/oils";
 import { OilForm } from "@/components/OilForm";
+import { describeIso } from "@/lib/iso9235";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Badge, Notice, inputClass, buttonClass, subButtonClass } from "@/components/ui";
 import {
@@ -82,6 +83,9 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
             {oil.annex_ncs_name && (
               <span>
                 {oil.annex_ncs_name}(ISO {oil.annex_iso_category ?? "-"})
+                {describeIso(oil.annex_iso_category) && (
+                  <span className="text-gray-600 dark:text-gray-300">:{describeIso(oil.annex_iso_category)}</span>
+                )}
               </span>
             )}
           </p>
@@ -111,6 +115,9 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
             <p className="font-medium">
               {c.ncs_name} <span className="text-xs text-gray-500">ISO {c.iso_category ?? "-"}</span>
             </p>
+            {describeIso(c.iso_category) && (
+              <p className="text-sm text-gray-700 dark:text-gray-200">{describeIso(c.iso_category)}</p>
+            )}
             <p className="text-xs text-gray-500">{c.botanical_name}</p>
             <p className="mt-1 text-xs">規制成分:{c.constituents}</p>
             <form action={setAnnexLink} className="mt-2 flex flex-col gap-2">
@@ -127,6 +134,11 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
         ))}
       </ul>
       {q && candidates.length === 0 && <p className="text-sm text-gray-500">見つかりませんでした。言葉を変えて探してください。</p>}
+      {candidates.length > 0 && (
+        <p className="text-xs text-gray-500">
+          「部位/方法」の説明は、Annex の「ISO の区分」(例:G2.5)を、IFRA の Annex の付録(Appendix - ISO9235)にもとづいて日本語にしたものです。
+        </p>
+      )}
 
       <form action={setAnnexLink} className="flex flex-col gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
         <input type="hidden" name="id" value={oil.id} />
