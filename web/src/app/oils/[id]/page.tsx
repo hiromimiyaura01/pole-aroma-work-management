@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AMENDMENT, MATCH_LABELS, cleanSearch, type OilStatus } from "@/lib/oils";
 import { OilForm } from "@/components/OilForm";
+import { SubmitButton } from "@/components/SubmitButton";
 import { Badge, Notice, inputClass, buttonClass, subButtonClass } from "@/components/ui";
 import {
   updateOil,
@@ -87,9 +88,7 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
           {oil.annex_reason && <p className="text-gray-600 dark:text-gray-300">理由:{oil.annex_reason}</p>}
           <form action={clearAnnexLink}>
             <input type="hidden" name="id" value={oil.id} />
-            <button type="submit" className={subButtonClass}>
-              結びつきを外す(未設定に戻す)
-            </button>
+            <SubmitButton className={subButtonClass} pendingText="処理中…">結びつきを外す(未設定に戻す)</SubmitButton>
           </form>
         </div>
       ) : (
@@ -120,12 +119,8 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
               <input type="hidden" name="iso_category" value={c.iso_category ?? ""} />
               <input name="reason" placeholder="近似のときの理由(例:木部の精油がないので樹皮で代用)" className={inputClass} />
               <div className="flex gap-2">
-                <button type="submit" name="match_type" value="exact" className={subButtonClass}>
-                  一致として選ぶ
-                </button>
-                <button type="submit" name="match_type" value="approx" className={subButtonClass}>
-                  近似として選ぶ
-                </button>
+                <SubmitButton name="match_type" value="exact" className={subButtonClass} pendingText="処理中…">一致として選ぶ</SubmitButton>
+                <SubmitButton name="match_type" value="approx" className={subButtonClass} pendingText="処理中…">近似として選ぶ</SubmitButton>
               </div>
             </form>
           </li>
@@ -138,9 +133,7 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
         <p className="text-sm">探しても Annex に該当するものがないとき:</p>
         <input name="reason" placeholder="理由(例:Annex に載っていない)" className={inputClass} />
         <div>
-          <button type="submit" name="match_type" value="none" className={subButtonClass}>
-            Annex になし として記録する
-          </button>
+          <SubmitButton name="match_type" value="none" className={subButtonClass} pendingText="処理中…">Annex になし として記録する</SubmitButton>
         </div>
       </form>
     </section>
@@ -199,9 +192,7 @@ async function StandardSection({ oil, searchParams }: { oil: OilStatus; searchPa
               <form action={removeStandardLink}>
                 <input type="hidden" name="id" value={oil.id} />
                 <input type="hidden" name="standard_key" value={s.standard_key} />
-                <button type="submit" className={subButtonClass}>
-                  外す
-                </button>
+                <SubmitButton className={subButtonClass} pendingText="処理中…">外す</SubmitButton>
               </form>
             </li>
           ))}
@@ -229,9 +220,7 @@ async function StandardSection({ oil, searchParams }: { oil: OilStatus; searchPa
             <form action={addStandardLink}>
               <input type="hidden" name="id" value={oil.id} />
               <input type="hidden" name="standard_key" value={s.standard_key} />
-              <button type="submit" className={subButtonClass}>
-                結びつける
-              </button>
+              <SubmitButton className={subButtonClass} pendingText="処理中…">結びつける</SubmitButton>
             </form>
           </li>
         ))}
@@ -265,9 +254,7 @@ async function OilDetail({ params, searchParams }: PageProps<"/oils/[id]">) {
         </div>
         <form action={deleteOil} className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
           <input type="hidden" name="id" value={oil.id} />
-          <button type="submit" className="text-sm text-red-600 underline">
-            この精油を消す(IFRA との結びつきも消えます)
-          </button>
+          <SubmitButton className="text-sm text-red-600 underline" pendingText="消しています…">この精油を消す(IFRA との結びつきも消えます)</SubmitButton>
         </form>
       </details>
     </>

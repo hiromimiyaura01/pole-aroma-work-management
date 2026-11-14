@@ -1,19 +1,23 @@
 import { EXTRACTION_METHODS, KIND_LABELS, PLANT_PARTS, type Oil } from "@/lib/oils";
 import { Field, inputClass, buttonClass } from "./ui";
+import { SubmitButton } from "./SubmitButton";
 
 // 精油の基本情報の入力欄(新規登録と編集で共通)
 export function OilForm({
   oil,
   action,
   submitLabel,
+  submissionToken,
 }: {
   oil?: Oil;
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
+  submissionToken?: string; // 新規登録のときの「この1回の登録の番号」(二重登録を防ぐ)
 }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       {oil && <input type="hidden" name="id" value={oil.id} />}
+      {submissionToken && <input type="hidden" name="submission_token" value={submissionToken} />}
       <Field label="名前(必須)" hint="一覧で見る代表の名前。ノートでの書き方(別名)は、写真の読み取りを作るときの表記揺れ辞書で持ちます">
         <input name="name" required defaultValue={oil?.name} className={inputClass} />
       </Field>
@@ -63,9 +67,7 @@ export function OilForm({
         <textarea name="memo" rows={2} defaultValue={oil?.memo ?? ""} className={inputClass} />
       </Field>
       <div>
-        <button type="submit" className={buttonClass}>
-          {submitLabel}
-        </button>
+        <SubmitButton className={buttonClass}>{submitLabel}</SubmitButton>
       </div>
     </form>
   );

@@ -35,10 +35,21 @@ export function Badge({ tone, children }: { tone: "ok" | "warn" | "muted" | "inf
   return <span className={`inline-block rounded px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
 }
 
-export function Notice({ searchParams }: { searchParams: { error?: string | string[]; saved?: string | string[] } }) {
+export function Notice({
+  searchParams,
+}: {
+  searchParams: { error?: string | string[]; saved?: string | string[]; already?: string | string[] };
+}) {
   const error = Array.isArray(searchParams.error) ? searchParams.error[0] : searchParams.error;
   if (error) {
     return <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">{error}</p>;
+  }
+  if (searchParams.already) {
+    return (
+      <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+        この入力は、すでに登録済みです(二重に登録しないよう、2回目は保存していません)。変更があれば、下の「基本情報を直す」から直してください。
+      </p>
+    );
   }
   if (searchParams.saved) {
     return <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">保存しました</p>;

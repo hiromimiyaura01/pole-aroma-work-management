@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { login } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 async function ErrorMessage({
   searchParams,
@@ -42,12 +43,9 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         <Suspense fallback={null}>
           <ErrorMessage searchParams={searchParams} />
         </Suspense>
-        <button
-          type="submit"
-          className="rounded bg-gray-900 px-4 py-2 text-white"
-        >
+        <SubmitButton className="justify-center rounded bg-gray-900 px-4 py-2 text-white" pendingText="ログイン中…">
           ログイン
-        </button>
+        </SubmitButton>
       </form>
     </main>
   );

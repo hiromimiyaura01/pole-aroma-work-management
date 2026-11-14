@@ -30,17 +30,43 @@ function fail(path: string, message: string): never {
 }
 
 // 精油を新しく登録する
+// 二重登録を防ぐ(冪等性):入力画面ごとの「この1回の登録の番号」(submission_token)を一緒に保存し、
+// 同じ番号の2回目以降は保存せず、1回目に登録した精油の画面に移して知らせる(2回目の中身は使わない)
 export async function createOil(formData: FormData) {
   const fields = oilFields(formData);
   if (!fields.name) fail("/oils/new", "名前を入れてください");
 
+  const token = String(formData.get("submission_token") ?? "");
+  if (!/^[0-9a-f-]{36}$/.test(token)) fail("/oils/new", "画面を開き直してから登録してください");
+
   const supabase = await createClient();
+
+  const findExisting = async () => {
+    const { data } = await supabase
+      .from("essential_oils")
+      .select("id")
+      .eq("submission_token", token)
+      .maybeSingle();
+    return data?.id as string | undefined;
+  };
+
+  const existing = await findExisting();
+  if (existing) redirect(`/oils/${existing}?already=1`);
+
   const { data, error } = await supabase
     .from("essential_oils")
-    .insert(fields)
+    .insert({ ...fields, submission_token: token })
     .select("id")
     .single();
-  if (error || !data) fail("/oils/new", `登録できませんでした:${error?.message ?? ""}`);
+
+  if (error) {
+    // ほぼ同時に2回送られて、もう片方が先に保存した場合(同じ番号は1件しか入らない)
+    if (error.code === "23505") {
+      const winner = await findExisting();
+      if (winner) redirect(`/oils/${winner}?already=1`);
+    }
+    fail("/oils/new", `登録できませんでした:${error.message}`);
+  }
 
   revalidatePath("/oils");
   redirect(`/oils/${data.id}?saved=1`);
