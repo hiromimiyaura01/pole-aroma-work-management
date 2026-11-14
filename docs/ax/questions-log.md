@@ -307,7 +307,17 @@
   - 【事実】Annex には、学名が同じ Cinnamomum camphora の精油が4つあり、**名前で分かれている**:Ho bark oil(C2.12、Geraniol 0.03%)/Ho Leaf oil(E2.12、Geraniol 0.4%)/Camphor oil, brown(D2.12、Safrole 80%)/Camphor oil, yellow(D2.12、Safrole 50%)。
   - 【推測】「Ho」が芳樟(リナロールが多いタイプ)、「Camphor oil」がクスノキ(樟脳をとるタイプ)の油にあたる。学名や部位だけで選ぶと、サフロールが 50〜80% の行を選んでしまうおそれがある。**名前とケモタイプ(主成分)で選ぶ**必要がある。
   - ひろみのホーウッド(木部・リナロールが多い)にぴったりの行はない。事前検証では Ho bark oil で近似にした(05)。
-- **残ったこと**:精油の登録に「ケモタイプ(主成分)」の欄がない。メモ欄と、近似の理由に書いて残す。欄を足すかは別途決める。
+- **決めたこと**:ケモタイプは、当面メモ欄(と近似の理由)に書く。欄は足さない(ひろみ「一旦メモ欄に記載でいいよ〜」)。
+
+### Q34. Annex の精油は、名前から特定するしかないのか。公式のサイトで詳しく調べられないか
+
+- **ひろみの質問(2026-11-14)**:「私もサフロールはクスノキでしょ、と思って気づけたけど、これって名前から特定するしかないのかなぁ」「名前をどこかの公式ウェブサイトみたいので検索したらもっと詳しい情報が見れるとかないかな」「今後、ユーカリあたりを登録するときにこの辺が課題になりそうだね」
+- **答えの要点**:
+  - 【事実】Annex の行には、名前・学名・ISO の区分のほかに、**精油そのものの CAS 番号** と **RIFM の番号** が入っている(データベースの `ifra_annex` の `ncs_cas`・`rifm_id`。今の選ぶ画面には出していない)。例:Ho bark oil/Ho Leaf oil は CAS 8022-91-1、Camphor oil は CAS 8008-51-3。芳樟とクスノキ(樟脳)は、CAS 番号でも分かれている。
+  - 【事実】IFRA には、天然の香料の名前のつけ方を説明したページがある(IFRA Transparency List の「Nomenclature for natural complex substances」。https://ifrafragrance.org/transparency-list/about-the-ifra-transparency-list/nomenclature-for-natural-complex-substances-on-the-ifra-transparency-list 。検索で見つけただけで、中身はまだ読んでいない。確認日 2026-11-14)。
+  - 【推測】CAS 番号で調べると、その精油の説明(部位・主成分)が見つかることがある。ただし、ケモタイプまで公式に書いてある一覧は見つかっていない。いちばん確かな手がかりは、**Annex に載っている規制成分の中身**(選ぶ画面に出ている)と、**自分の精油の成分表・商品ページ** を見比べること。
+  - 【事実】ユーカリは、Annex に Eucalyptus citriodora oil(シトロネラール 71.77% など)・Eucalyptus dives oil・Eucalyptus radiata oil の3つだけ。**グロブルスは載っていない**。
+- **残ったこと**:選ぶ画面に、精油の CAS 番号を出すか(未定)。
 
 ## 用語集
 
