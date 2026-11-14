@@ -319,6 +319,16 @@
   - 【事実】ユーカリは、Annex に Eucalyptus citriodora oil(シトロネラール 71.77% など)・Eucalyptus dives oil・Eucalyptus radiata oil の3つだけ。**グロブルスは載っていない**。
 - **決めたこと**:選ぶ画面に CAS 番号は出さない(今のまま)。ひろみ「わからないときに調べることはできそうだし、CASが必要な頻度がまだ不明だから」。必要な場面が増えたら見直す。
 
+### Q35. 【備忘】Annex の Mandarin oil と Tangerine oil は、学名が同じで見分けられない
+
+- **ひろみのメモ(2026-11-14)**:「Mandarin oil ISO G2.5 … Citrus reticulata Blanco 規制成分:Methyl N-methylanthranilate 0.4% と Tangerine oil ISO G2.5 … Citrus reticulata blanco 規制成分:Citral 0.1%, Citronellal 0.1% があったな〜 これ学名が一緒でわかんないや、、」
+- **分かっていること**:
+  - 【事実】Annex では、学名(Citrus reticulata Blanco)も ISO の区分(G2.5=果皮・圧搾)も同じ。違うのは **名前・CAS 番号・RIFM の番号・規制成分**。Mandarin oil=CAS 8008-31-9/RIFM 250/Methyl N-methylanthranilate 0.4%。Tangerine oil=CAS 8016-85-1/RIFM 6607/Citral 0.1%・Citronellal 0.1%。
+  - 【事実】柑橘のフロクマリンの基準(IFRA_STD_089)の本文は、Tangerine oil cold pressed を「少量の 5-MOP(50 ppm)を含む精油」に挙げている(`notes/2026-11-10_ifra-notebox-review.md`)。Mandarin oil は挙がっていない。
+  - 【推測】香料の世界では、同じ種の中の品種・産地のちがいで「マンダリン」と「タンジェリン」を呼び分けている。Q33(芳樟とクスノキ)と同じで、**学名では決まらず、名前で選ぶ** 例。
+- **見分ける手がかり(案)**:ブランドの商品名(マンダリン/タンジェリン)、成分表に N-メチルアントラニル酸メチル(マンダリン特有の成分)があるか、SDS の CAS 番号。
+- **残ったこと**:ひろみの精油がどちらにあたるかは、まだ決めていない。
+
 ## 用語集
 
 | 用語 | ひとことで言うと |
