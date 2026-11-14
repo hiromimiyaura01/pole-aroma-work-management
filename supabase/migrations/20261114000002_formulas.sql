@@ -1,6 +1,5 @@
 -- =====================================================================
 -- 処方の記録(R3・R4)。確認の計算(R10)の入力になる
--- 【下書き】ひろみと設計を確かめてから実行する。まだ実行しない
 -- 実行方法:Supabase の SQL Editor に貼って Run(1回だけ)
 -- 処方の配合そのものは、データベースにだけ置く(リポジトリ・チャットには書かない)
 -- =====================================================================
@@ -92,7 +91,68 @@ select
 from public.formula_lines l
 join public.formulas f on f.id = l.formula_id;
 
--- 6. 誰が読める・書けるか(RLS と GRANT の両方)--------------------------
+-- 6. 処方と配合行を、まとめて保存する関数 ----------------------------------
+-- 「処方は入ったのに配合行が入らなかった」という中途半端な状態を作らないため、
+-- 1回の呼び出しで全部入るか、全部入らないかのどちらかにする(トランザクション)
+--   p_id が空:新しく登録する(不変 ID が自動で振られる)
+--             同じ「登録の番号」がすでにあれば、保存せずにその処方の ID を返す(created = false)
+--   p_id あり:その処方の賦香率などを直し、配合行を入れ替える
+-- p_lines の形:[{"oil_id": "…", "amount": 10, "dilution_pct": 10, "note_group": "top"}, …]
+create function public.save_formula(
+  p_id                text,
+  p_submission_token  uuid,
+  p_fragrance_pct     numeric,
+  p_completed_on      date,
+  p_memo              text,
+  p_lines             jsonb
+) returns table (saved_id text, created boolean)
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_id text;
+begin
+  if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
+    raise exception '配合行が1行もありません';
+  end if;
+
+  if p_id is null then
+    insert into public.formulas (fragrance_pct, completed_on, memo, submission_token)
+    values (p_fragrance_pct, coalesce(p_completed_on, current_date), p_memo, p_submission_token)
+    on conflict (submission_token) do nothing
+    returning id into v_id;
+
+    if v_id is null then  -- 同じ登録の番号がすでにある(2回目)。中身は使わない
+      select f.id into v_id from public.formulas f where f.submission_token = p_submission_token;
+      return query select v_id, false;
+      return;
+    end if;
+  else
+    update public.formulas f
+       set fragrance_pct = p_fragrance_pct,
+           completed_on  = coalesce(p_completed_on, f.completed_on),
+           memo          = p_memo
+     where f.id = p_id
+    returning f.id into v_id;
+    if v_id is null then
+      raise exception '処方 % が見つかりません', p_id;
+    end if;
+    delete from public.formula_lines l where l.formula_id = v_id;
+  end if;
+
+  insert into public.formula_lines (formula_id, line_no, oil_id, amount, dilution_pct, note_group)
+  select v_id,
+         t.ord::int,
+         (t.line ->> 'oil_id')::uuid,
+         (t.line ->> 'amount')::numeric,
+         coalesce((t.line ->> 'dilution_pct')::numeric, 10),
+         nullif(t.line ->> 'note_group', '')
+  from jsonb_array_elements(p_lines) with ordinality as t(line, ord);
+
+  return query select v_id, true;
+end $$;
+
+-- 7. 誰が読める・書けるか(RLS と GRANT の両方)--------------------------
 alter table public.products            enable row level security;
 alter table public.formulas            enable row level security;
 alter table public.formula_lines       enable row level security;
@@ -115,3 +175,5 @@ grant select, insert, update, delete on
 to authenticated;
 grant usage on sequence public.formula_id_seq to authenticated;  -- 次の番号を振るため
 grant select on public.formula_line_concentrations to authenticated;
+revoke execute on function public.save_formula(text, uuid, numeric, date, text, jsonb) from public, anon;
+grant execute on function public.save_formula(text, uuid, numeric, date, text, jsonb) to authenticated;

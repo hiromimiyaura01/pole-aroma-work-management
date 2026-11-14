@@ -91,7 +91,11 @@ export async function deleteOil(formData: FormData) {
   const id = String(formData.get("id"));
   const supabase = await createClient();
   const { error } = await supabase.from("essential_oils").delete().eq("id", id);
-  if (error) fail(`/oils/${id}`, `消せませんでした:${error.message}`);
+  if (error) {
+    // 処方で使っている精油は消せない(消すと、過去の処方の確認結果が変わってしまうため)
+    const message = error.code === "23503" ? "この精油は処方で使われているので、消せません" : error.message;
+    fail(`/oils/${id}`, `消せませんでした:${message}`);
+  }
 
   revalidatePath("/oils");
   redirect("/oils");

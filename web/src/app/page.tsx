@@ -24,8 +24,11 @@ export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-10">
       <h1 className="text-2xl font-bold">POLE AROMA 処方ノート</h1>
-      <p>処方の記録と、IFRA の上限の確認を補助する道具です(準備中)。</p>
+      <p>処方の記録と、IFRA の上限の確認を補助する道具です。</p>
       <nav className="flex flex-col gap-2">
+        <Link href="/formulas" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
+          処方の一覧・登録・IFRA の確認 →
+        </Link>
         <Link href="/oils" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
           精油の一覧・登録 →
         </Link>
