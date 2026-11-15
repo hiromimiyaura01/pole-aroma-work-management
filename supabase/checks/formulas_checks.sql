@@ -48,6 +48,10 @@ where amendment = 51 and source_rows > 1;
 --             Benzyl cyanide は、例外表の決定(上限 0.01%)で数値として出る(事前検証のときは「本文の確認が必要」)
 --   HOPE    :黄 Bergamot oil expressed 約3.75倍・Methyl eugenol 約3.6倍・Thujone 約1.4倍/近似 2
 -- 手計算と違うところがあれば、どちらが正しいかを一緒に確かめる(手計算が間違っていることもある)
+-- 【2026-11-15 の答え合わせの結果】計算は3処方とも合った。食い違って見えたのは、次の3つ(計算の間違いではない)
+--   ・Thujone:フランキンセンスを Olibanum sacra oil(合計 0.3%)に結びつけた。手計算は Boswellia spp.(0.5%)。倍率は手計算の 0.6 倍になる
+--   ・Bergamot oil expressed:精油の画面の「② 原料そのものの基準」に結びつけるまで出ない
+--   ・GRACE の p-Cresol:事前検証のあとで処方を調整した。調整後は 約0.82倍(上限に近い)
 select
   s.id                                   as 処方,
   s.all_sale_names                       as 販売名,
