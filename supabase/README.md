@@ -58,3 +58,16 @@ python3 -I tools/ifra/build_seed.py <一覧表.xlsx> <Annex.xlsx> supabase/seed
 - 処方のデータは、アプリの画面から登録する。リポジトリには入れない。
 - 計算の流れ(途中のビューも SQL Editor で見られる):
   `formula_line_concentrations`(配合行ごとの濃度)→ `formula_oil_concentrations`(精油ごと)→ `formula_check_contributions`(精油 × 規制成分)→ `formula_check_items`(基準ごとの合計と段階)→ `formula_check_board`(最新の判断を重ねたもの)
+
+## Annex の精油の CAS 番号を、選ぶ画面に出す(2026-11-15)
+
+1. `migrations/20261114000004_annex_ncs_cas.sql`(ビュー `ifra_annex_ncs` に、精油の CAS 番号・そのほかの CAS 番号・RIFM の番号の列を足す)
+2. 確認:次の SQL を Run。期待:2行。Mandarin oil = 8008-31-9、Tangerine oil = 8016-85-1
+
+```sql
+select ncs_name, iso_category, ncs_cas, ncs_other_cas, rifm_id
+from public.ifra_annex_ncs
+where amendment = 51 and ncs_name in ('Mandarin oil', 'Tangerine oil')
+order by ncs_name;
+```
+- 実行する前でも、精油の画面は今までどおり動く(CAS 番号が出ないだけ)。
