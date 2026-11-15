@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AMENDMENT } from "@/lib/oils";
 import {
   DECISION_LABELS,
+  DECISION_OPTIONS,
   GROUP_LABELS,
   fmt,
   fmtDateTimeJst,
@@ -124,7 +125,7 @@ function JudgmentForm({ item }: { item: CheckItem }) {
       <input type="hidden" name="item_type" value={item.item_type} />
       <input type="hidden" name="item_key" value={item.item_key} />
       <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        {Object.entries(DECISION_LABELS).map(([value, label]) => (
+        {Object.entries(DECISION_OPTIONS).map(([value, label]) => (
           <label key={value} className="flex items-center gap-1">
             <input type="radio" name="decision" value={value} required defaultChecked={item.decision === value} className="h-4 w-4" />
             {label}
@@ -138,8 +139,8 @@ function JudgmentForm({ item }: { item: CheckItem }) {
         className={inputClass}
       />
       <div>
-        <SubmitButton className={subButtonClass} pendingText="記録中…">
-          判断を記録する
+        <SubmitButton className={buttonClass} pendingText="記録中…">
+          {item.decision ? "判断を記録し直す" : "この判断を記録する"}
         </SubmitButton>
       </div>
     </form>
@@ -152,7 +153,7 @@ function JudgmentNote({ item }: { item: CheckItem }) {
     <p className="text-xs text-gray-600 dark:text-gray-300">
       {item.judgment_state === "changed" && (
         <strong className="block text-amber-800 dark:text-amber-200">
-          判断を記録したあとで、数字が変わりました(記録したとき:{fmtRatio(item.ratio_at_decision)})。もう一度見てください。
+          判断を記録したあとで、結果が変わりました(記録したとき:上限の {fmtRatio(item.ratio_at_decision)})。もう一度判断してください。
         </strong>
       )}
       記録済みの判断:{DECISION_LABELS[item.decision] ?? item.decision}({fmtDateTimeJst(item.decided_at)})
@@ -226,10 +227,13 @@ async function CheckSection({ formula }: { formula: FormulaStatus }) {
   if (error) return <p className="text-sm text-red-600">確認の結果を読み込めませんでした:{error.message}</p>;
   const items = (data ?? []) as CheckItem[];
 
-  // 見る順:判断がいるもの → 直す・確かめるもの → 記録済み(目立たせない)→ 気になる点なし
-  const attention = items.filter((i) => ["undecided", "changed", "hold", "change"].includes(i.judgment_state));
+  // 見る順:判断がいるもの → 直す・確かめるもの → 判断済み(目立たせない)→ 気になる点なし
+  // 判断がいるもの = まだ判断していない/判断のあとで結果が変わった/前に「保留」にした
+  const attention = items.filter((i) => ["undecided", "changed", "hold"].includes(i.judgment_state));
   const fixes = items.filter((i) => i.judgment_state === "fix");
-  const accepted = items.filter((i) => i.judgment_state === "accepted");
+  const decided = items.filter((i) => ["accepted", "change"].includes(i.judgment_state));
+  const nAccept = decided.filter((i) => i.judgment_state === "accepted").length;
+  const nChange = decided.length - nAccept;
   const oks = items.filter((i) => i.judgment_state === "none");
 
   return (
@@ -241,7 +245,9 @@ async function CheckSection({ formula }: { formula: FormulaStatus }) {
         {formula.n_near > 0 && <Badge tone="info">上限に近い {formula.n_near}</Badge>}
         {formula.n_unconfirmed > 0 && <Badge tone="muted">未確認の精油あり {formula.n_unconfirmed}</Badge>}
         {formula.n_needs_review > 0 && <Badge tone="muted">確認が必要 {formula.n_needs_review}</Badge>}
-        {attention.length + fixes.length + accepted.length === 0 && <Badge tone="ok">気になる点なし</Badge>}
+        {attention.length + fixes.length + decided.length === 0 && <Badge tone="ok">気になる点なし</Badge>}
+        {attention.length > 0 && <Badge tone="warn">判断待ち {attention.length}</Badge>}
+        {attention.length === 0 && decided.length > 0 && <Badge tone="ok">判断済み</Badge>}
       </p>
       <p className="text-xs text-gray-500">
         成分の量は、IFRA の Annex の典型値から計算した参考値です。実際の瓶(ロット)では変わります。上限を超えるかどうかの判断は、事業者が行います。
@@ -250,6 +256,9 @@ async function CheckSection({ formula }: { formula: FormulaStatus }) {
       {attention.length > 0 && (
         <>
           <h3 className="text-sm font-bold">判断がいるもの({attention.length}件)</h3>
+          <p className="text-xs text-gray-500">
+            1つずつ「意図して超える」か「処方を変える」を選び、「この判断を記録する」を押してください。記録すると、下の「判断済み」に移ります。
+          </p>
           <ul className="flex flex-col gap-3">
             {attention.map((i) => (
               <ItemCard key={`${i.item_type}-${i.item_key}`} item={i} withForm />
@@ -272,11 +281,17 @@ async function CheckSection({ formula }: { formula: FormulaStatus }) {
         </>
       )}
 
-      {accepted.length > 0 && (
+      {decided.length > 0 && (
         <details>
-          <summary className="cursor-pointer text-sm">「意図して超える」と記録済み({accepted.length}件)</summary>
+          <summary className="cursor-pointer text-sm">
+            判断済み({decided.length}件:
+            {[nAccept > 0 && `意図して超える ${nAccept}`, nChange > 0 && `処方を変える ${nChange}`].filter(Boolean).join("・")})
+          </summary>
+          <p className="mt-2 text-xs text-gray-500">
+            判断を記録したあとで、上限との比が上がったり段階が変わったりしたときは、もう一度「判断がいるもの」に出ます。
+          </p>
           <ul className="mt-3 flex flex-col gap-3">
-            {accepted.map((i) => (
+            {decided.map((i) => (
               <ItemCard key={`${i.item_type}-${i.item_key}`} item={i} withForm />
             ))}
           </ul>
@@ -437,6 +452,11 @@ async function FormulaDetail({ params, searchParams }: PageProps<"/formulas/[id]
         ピローミスト(カテゴリ 11B)・賦香率 {formula.fragrance_pct}%・完成 {formula.completed_on}
         {formula.memo && <span className="block">メモ:{formula.memo}</span>}
       </p>
+      {sp.judged && !sp.error && (
+        <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">
+          判断を記録しました。「確認の結果」の「判断済み」に入っています。
+        </p>
+      )}
       <Notice
         searchParams={sp}
         alreadyText="この入力は、すでに登録済みです(二重に登録しないよう、2回目は保存していません)。変更があれば、下の「処方を直す」から直してください。"

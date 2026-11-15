@@ -6,9 +6,15 @@ export const GROUP_LABELS: Record<string, string> = {
   base: "ベース",
 };
 
-export const DECISION_LABELS: Record<string, string> = {
+// 判断の選択肢(2026-11-15:「保留」をなくして2つにした)
+export const DECISION_OPTIONS: Record<string, string> = {
   accept: "意図して超える",
   change: "処方を変える",
+};
+
+// 表示用(前に記録した「保留」も読めるように残す)
+export const DECISION_LABELS: Record<string, string> = {
+  ...DECISION_OPTIONS,
   hold: "保留",
 };
 

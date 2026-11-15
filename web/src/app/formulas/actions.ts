@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AMENDMENT } from "@/lib/oils";
-import { DECISION_LABELS, GROUP_LABELS } from "@/lib/formulas";
+import { DECISION_OPTIONS, GROUP_LABELS } from "@/lib/formulas";
 
 const ID_RE = /^P[0-9]{5}$/;
 const UUID_RE = /^[0-9a-f-]{36}$/;
@@ -173,7 +173,7 @@ export async function recordJudgment(formData: FormData) {
   const decision = String(formData.get("decision") ?? "");
   const reason = text(formData, "reason");
 
-  if (!(decision in DECISION_LABELS)) fail(`/formulas/${id}`, "判断を選んでください");
+  if (!(decision in DECISION_OPTIONS)) fail(`/formulas/${id}`, "判断を選んでください");
   if (decision === "accept" && !reason) fail(`/formulas/${id}`, "「意図して超える」ときは、理由を書いてください");
 
   const supabase = await createClient();
@@ -203,7 +203,7 @@ export async function recordJudgment(formData: FormData) {
   if (error) fail(`/formulas/${id}`, `記録できませんでした:${error.message}`);
 
   revalidatePath("/formulas");
-  redirect(`/formulas/${id}?saved=1`);
+  redirect(`/formulas/${id}?judged=1`);
 }
 
 // 「この結果を見た」と記録する(確認の記録)
