@@ -61,9 +61,6 @@ async function FormulaList() {
 export default function FormulasPage() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-6">
-      <Link href="/" className="text-sm underline">
-        ← トップ
-      </Link>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">処方</h1>
         <Link href="/formulas/new" className={buttonClass}>
