@@ -71,3 +71,16 @@ where amendment = 51 and ncs_name in ('Mandarin oil', 'Tangerine oil')
 order by ncs_name;
 ```
 - 実行する前でも、精油の画面は今までどおり動く(CAS 番号が出ないだけ)。
+
+## 写真の読み取り(R1〜R4)(2026-11-15)
+
+1. `migrations/20261115000001_formula_readings.sql`(読み取りの記録の表と、ノート写真の非公開の置き場所 `note-photos`)
+2. 確認:次の SQL を Run。期待:1行目 `note-photos | false`(非公開)、2行目 `formula_readings | 0`
+
+```sql
+select id as name, public::text as value from storage.buckets where id = 'note-photos'
+union all
+select 'formula_readings', count(*)::text from public.formula_readings;
+```
+- 写真は Supabase の左メニュー **Storage → note-photos** でも見られる(ログインした人だけ)。
+- AI の下書き(`draft`)と、人が保存した配合行(`final_lines`)の両方が残る。あとで Evals(R16)と、直した行の数(R17)に使う。

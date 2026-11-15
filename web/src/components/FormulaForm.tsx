@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { GROUP_LABELS, type LineInput } from "@/lib/formulas";
+import type { LineHint } from "@/lib/readings";
 import { Field, inputClass, buttonClass, subButtonClass } from "./ui";
 import { SubmitButton } from "./SubmitButton";
 
 type OilOption = { id: string; name: string };
+type Line = LineInput & { key: number; hint?: LineHint };
 
-const emptyLine = (key: number): LineInput & { key: number } => ({
+const emptyLine = (key: number): Line => ({
   key,
   oil_id: "",
   amount: "",
@@ -15,7 +17,8 @@ const emptyLine = (key: number): LineInput & { key: number } => ({
   note_group: "",
 });
 
-// 処方の入力欄(新規登録と編集で共通)。配合行は、行を足しながら入れる
+// 処方の入力欄(新規登録・編集・写真の読み取りの確認で共通)。配合行は、行を足しながら入れる
+// hints があるとき(写真の読み取り):各行に「ノートでの書き方」と「確認してほしいこと」を出す
 export function FormulaForm({
   oils,
   action,
@@ -23,6 +26,8 @@ export function FormulaForm({
   formulaId,
   submissionToken,
   defaults,
+  hints,
+  hidden,
 }: {
   oils: OilOption[];
   action: (formData: FormData) => Promise<void>;
@@ -30,11 +35,13 @@ export function FormulaForm({
   formulaId?: string;
   submissionToken?: string; // 新規登録のときの「この1回の登録の番号」(二重登録を防ぐ)
   defaults: { fragrance_pct: string; completed_on: string; memo: string; lines: LineInput[] };
+  hints?: LineHint[]; // defaults.lines と同じ順
+  hidden?: Record<string, string>; // 一緒に送る値(例:読み取りの番号)
 }) {
   // key は、行を見分けるための通し番号(行を消しても、ほかの行の入力がずれないようにする)
-  const [lines, setLines] = useState(() =>
+  const [lines, setLines] = useState<Line[]>(() =>
     defaults.lines.length > 0
-      ? defaults.lines.map((l, i) => ({ ...l, key: i }))
+      ? defaults.lines.map((l, i) => ({ ...l, key: i, hint: hints?.[i] }))
       : [emptyLine(0), emptyLine(1), emptyLine(2)],
   );
   const addLine = () => setLines((prev) => [...prev, emptyLine(Math.max(-1, ...prev.map((l) => l.key)) + 1)]);
@@ -54,6 +61,9 @@ export function FormulaForm({
     <form action={action} className="flex flex-col gap-4">
       {formulaId && <input type="hidden" name="id" value={formulaId} />}
       {submissionToken && <input type="hidden" name="submission_token" value={submissionToken} />}
+      {Object.entries(hidden ?? {}).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
 
       <Field label="賦香率(%)(必須)" hint="完成品の重さに対する、精油(原液)の合計の重さ。例:10">
         <input
@@ -75,9 +85,24 @@ export function FormulaForm({
       <fieldset className="flex flex-col gap-3">
         <legend className="text-sm font-medium">配合(ノートの数字をそのまま入れる)</legend>
         {lines.map((l, i) => (
-          <div key={l.key} className="flex flex-col gap-2 rounded bg-gray-50 p-3 dark:bg-gray-900">
+          <div
+            key={l.key}
+            className={`flex flex-col gap-2 rounded p-3 ${
+              l.hint && l.hint.flags.length > 0
+                ? "border border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950"
+                : "bg-gray-50 dark:bg-gray-900"
+            }`}
+          >
+            <input type="hidden" name="written" value={l.hint?.written ?? ""} />
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>{i + 1}行目</span>
+              <span>
+                {i + 1}行目
+                {l.hint && (
+                  <span className="ml-2 text-gray-800 dark:text-gray-100">
+                    ノートの書き方:<strong>{l.hint.written}</strong>
+                  </span>
+                )}
+              </span>
               {lines.length > 1 && (
                 <button
                   type="button"
@@ -88,6 +113,13 @@ export function FormulaForm({
                 </button>
               )}
             </div>
+            {l.hint && l.hint.flags.length > 0 && (
+              <ul className="list-disc pl-5 text-xs text-amber-900 dark:text-amber-100">
+                {l.hint.flags.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            )}
             <select
               name="oil_id"
               required
