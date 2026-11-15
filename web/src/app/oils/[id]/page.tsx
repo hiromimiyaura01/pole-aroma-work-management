@@ -22,7 +22,25 @@ type Ncs = {
   botanical_name: string | null;
   constituent_count: number;
   constituents: string;
+  ncs_cas?: string | null; // 精油そのものの CAS 番号
+  ncs_other_cas?: string | null;
+  rifm_id?: string | null;
 };
+
+const NCS_COLUMNS = "ncs_name, iso_category, botanical_name, constituent_count, constituents";
+const NCS_ID_COLUMNS = "ncs_cas, ncs_other_cas, rifm_id"; // 20261114000004 の SQL で足した列
+
+// 精油そのものの CAS 番号と RIFM の番号(名前だけが違う精油を見分ける手がかり)
+function NcsIds({ ncs }: { ncs: Pick<Ncs, "ncs_cas" | "ncs_other_cas" | "rifm_id"> }) {
+  if (!ncs.ncs_cas && !ncs.ncs_other_cas && !ncs.rifm_id) return null;
+  return (
+    <p className="text-xs text-gray-500">
+      精油の CAS 番号:{ncs.ncs_cas ?? "記載なし"}
+      {ncs.ncs_other_cas && `(そのほか:${ncs.ncs_other_cas})`}
+      {ncs.rifm_id && `・RIFM ${ncs.rifm_id}`}
+    </p>
+  );
+}
 
 type StandardLimit = {
   standard_key: string;
@@ -58,16 +76,34 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
   const q = typed || cleanSearch(oil.botanical_name?.split(/\s+/).slice(0, 2).join(" "));
   const supabase = await createClient();
 
-  let candidates: Ncs[] = [];
-  if (q) {
-    const { data } = await supabase
+  // CAS 番号の列は、SQL(20261114000004)を実行するまで存在しない。なければ、今までの列だけで読む
+  const searchNcs = (columns: string) =>
+    supabase
       .from("ifra_annex_ncs")
-      .select("ncs_name, iso_category, botanical_name, constituent_count, constituents")
+      .select(columns)
       .eq("amendment", AMENDMENT)
       .or(`ncs_name.ilike.%${q}%,botanical_name.ilike.%${q}%`)
       .order("ncs_name")
       .limit(30);
-    candidates = (data ?? []) as Ncs[];
+
+  let candidates: Ncs[] = [];
+  if (q) {
+    let res = await searchNcs(`${NCS_COLUMNS}, ${NCS_ID_COLUMNS}`);
+    if (res.error) res = await searchNcs(NCS_COLUMNS);
+    candidates = (res.data ?? []) as unknown as Ncs[];
+  }
+
+  // 今結びついている Annex の精油の CAS 番号
+  let linkedIds: Pick<Ncs, "ncs_cas" | "ncs_other_cas" | "rifm_id"> | null = null;
+  if (oil.annex_ncs_name) {
+    let query = supabase
+      .from("ifra_annex_ncs")
+      .select(NCS_ID_COLUMNS)
+      .eq("amendment", AMENDMENT)
+      .eq("ncs_name", oil.annex_ncs_name);
+    query = oil.annex_iso_category ? query.eq("iso_category", oil.annex_iso_category) : query.is("iso_category", null);
+    const { data } = await query.maybeSingle();
+    linkedIds = data as typeof linkedIds;
   }
 
   return (
@@ -89,6 +125,7 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
               </span>
             )}
           </p>
+          {linkedIds && <NcsIds ncs={linkedIds} />}
           {oil.annex_reason && <p className="text-gray-600 dark:text-gray-300">理由:{oil.annex_reason}</p>}
           <form action={clearAnnexLink}>
             <input type="hidden" name="id" value={oil.id} />
@@ -119,6 +156,7 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
               <p className="text-sm text-gray-700 dark:text-gray-200">{describeIso(c.iso_category)}</p>
             )}
             <p className="text-xs text-gray-500">{c.botanical_name}</p>
+            <NcsIds ncs={c} />
             <p className="mt-1 text-xs">規制成分:{c.constituents}</p>
             <form action={setAnnexLink} className="mt-2 flex flex-col gap-2">
               <input type="hidden" name="id" value={oil.id} />
@@ -137,6 +175,7 @@ async function AnnexSection({ oil, searchParams }: { oil: OilStatus; searchParam
       {candidates.length > 0 && (
         <p className="text-xs text-gray-500">
           「部位/方法」の説明は、Annex の「ISO の区分」(例:G2.5)を、IFRA の Annex の付録(Appendix - ISO9235)にもとづいて日本語にしたものです。
+          学名も区分も同じで名前だけが違う精油は、規制成分の中身と、精油の CAS 番号(成分表や SDS に書いてあれば)で見分けてください。「そのほか」の番号は、別の名前の精油と重なることがあります。
         </p>
       )}
 

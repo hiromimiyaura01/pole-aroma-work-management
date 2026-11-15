@@ -48,3 +48,26 @@ python3 -I tools/ifra/build_seed.py <一覧表.xlsx> <Annex.xlsx> supabase/seed
 
 1. `migrations/20261114000001_oil_submission_token.sql`(精油に「この1回の登録の番号」の列と、同じ番号は1件だけの決まりを足す)
 - 片付け(1回だけ):`maintenance/2026-11-14_dedupe_oils_1_check.sql` で消える予定を確認 → `maintenance/2026-11-14_dedupe_oils_2_delete.sql` で消す
+
+## 処方と、確認の計算・判断の記録(R10〜R12)(2026-11-14)
+
+1. `migrations/20261114000002_formulas.sql`(製品・処方・配合行・販売名の表、完成品中の濃度のビュー、まとめて保存する関数)
+2. `migrations/20261114000003_formula_checks.sql`(確認の計算のビュー、判断の記録・確認の記録の表、一覧用のビュー)
+3. 確認:`checks/formulas_checks.sql` の①②を1つずつ Run(期待する値はファイルの中)
+4. 処方をアプリの画面(/formulas)から登録したあと、③(事前検証の3処方との答え合わせ)を Run
+- 処方のデータは、アプリの画面から登録する。リポジトリには入れない。
+- 計算の流れ(途中のビューも SQL Editor で見られる):
+  `formula_line_concentrations`(配合行ごとの濃度)→ `formula_oil_concentrations`(精油ごと)→ `formula_check_contributions`(精油 × 規制成分)→ `formula_check_items`(基準ごとの合計と段階)→ `formula_check_board`(最新の判断を重ねたもの)
+
+## Annex の精油の CAS 番号を、選ぶ画面に出す(2026-11-15)
+
+1. `migrations/20261114000004_annex_ncs_cas.sql`(ビュー `ifra_annex_ncs` に、精油の CAS 番号・そのほかの CAS 番号・RIFM の番号の列を足す)
+2. 確認:次の SQL を Run。期待:2行。Mandarin oil = 8008-31-9、Tangerine oil = 8016-85-1
+
+```sql
+select ncs_name, iso_category, ncs_cas, ncs_other_cas, rifm_id
+from public.ifra_annex_ncs
+where amendment = 51 and ncs_name in ('Mandarin oil', 'Tangerine oil')
+order by ncs_name;
+```
+- 実行する前でも、精油の画面は今までどおり動く(CAS 番号が出ないだけ)。
