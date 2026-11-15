@@ -25,7 +25,6 @@ import {
   setSaleEnd,
   removeSaleName,
   recordJudgment,
-  recordCheck,
 } from "../actions";
 
 type SearchParams = { [key: string]: string | string[] | undefined };
@@ -314,20 +313,11 @@ async function CheckSection({ formula }: { formula: FormulaStatus }) {
         </details>
       )}
 
-      <div className="flex flex-col gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-        <p className="text-sm">
-          {formula.last_checked_at
-            ? `最後に確認を記録した日時:${fmtDateTimeJst(formula.last_checked_at)}`
-            : "まだ、確認を記録していません。"}
+      {formula.last_checked_at && (
+        <p className="border-t border-gray-200 pt-3 text-xs text-gray-500 dark:border-gray-700">
+          最後に判断を記録した日時:{fmtDateTimeJst(formula.last_checked_at)}(判断を記録するたびに、そのときの結果の写しを自動で保存しています)
         </p>
-        <form action={recordCheck}>
-          <input type="hidden" name="id" value={formula.id} />
-          <SubmitButton className={buttonClass} pendingText="記録中…">
-            この結果を見た、と記録する
-          </SubmitButton>
-        </form>
-        <p className="text-xs text-gray-500">今の結果と判断の状態を、そのまま保存します(あとで結果が変わったときに、比べられます)。</p>
-      </div>
+      )}
     </section>
   );
 }

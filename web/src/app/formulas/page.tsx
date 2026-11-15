@@ -16,7 +16,7 @@ function StatusBadges({ f }: { f: FormulaStatus }) {
       {f.n_needs_review > 0 && <Badge tone="muted">本文の確認 {f.n_needs_review}</Badge>}
       {clean && <Badge tone="ok">気になる点なし</Badge>}
       {f.n_undecided > 0 && <Badge tone="warn">判断待ち {f.n_undecided}</Badge>}
-      {!f.last_checked_at && <Badge tone="muted">確認の記録なし</Badge>}
+      {f.n_undecided === 0 && f.n_red + f.n_yellow + f.n_near > 0 && <Badge tone="ok">判断済み</Badge>}
     </span>
   );
 }

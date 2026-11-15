@@ -202,17 +202,12 @@ export async function recordJudgment(formData: FormData) {
   });
   if (error) fail(`/formulas/${id}`, `記録できませんでした:${error.message}`);
 
+  // 判断を記録するたびに、そのときの結果の写し(確認の記録)を自動で残す(2026-11-15 決定)
+  const { error: checkError } = await supabase.rpc("record_formula_check", { p_formula_id: id, p_amendment: AMENDMENT });
+
   revalidatePath("/formulas");
+  if (checkError) {
+    fail(`/formulas/${id}`, `判断は記録しましたが、結果の写しを保存できませんでした:${checkError.message}`);
+  }
   redirect(`/formulas/${id}?judged=1`);
-}
-
-// 「この結果を見た」と記録する(確認の記録)
-export async function recordCheck(formData: FormData) {
-  const id = formulaId(formData);
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("record_formula_check", { p_formula_id: id, p_amendment: AMENDMENT });
-  if (error) fail(`/formulas/${id}`, `記録できませんでした:${error.message}`);
-
-  revalidatePath("/formulas");
-  redirect(`/formulas/${id}?saved=1`);
 }
