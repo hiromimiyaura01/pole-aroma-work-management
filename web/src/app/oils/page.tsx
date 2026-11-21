@@ -67,9 +67,14 @@ export default function OilsPage({ searchParams }: PageProps<"/oils">) {
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">精油</h1>
-        <Link href="/oils/new" className={buttonClass}>
-          + 登録
-        </Link>
+        <span className="flex items-center gap-3">
+          <Link href="/oils/aliases" className="text-sm underline">
+            書き方の辞書
+          </Link>
+          <Link href="/oils/new" className={buttonClass}>
+            + 登録
+          </Link>
+        </span>
       </div>
       <Suspense fallback={null}>
         <SearchBox searchParams={searchParams} />
