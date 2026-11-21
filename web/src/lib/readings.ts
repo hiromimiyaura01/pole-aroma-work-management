@@ -141,17 +141,31 @@ function groupMap(draft: DraftFormula): { map: Record<number, string>; byOrder: 
   return { map: Object.fromEntries(nos.map((n, i) => [n, names[i]])), byOrder: true };
 }
 
+export type MatchedBy = "dictionary" | "name" | "";
+
 export type LineHint = {
   written: string; // ノートでの書き方
   flags: string[]; // 確認してほしいこと(画面に出す)
+  matchedBy: MatchedBy; // 精油を最初に選んでおいた理由(辞書/名前がぴったり/なし)
+  initialOilId: string; // 最初に選んでおいた精油(人が直したかを、あとで数えるため)
+  rememberDefault: boolean; // 「この書き方を覚える」を最初からオンにするか
+  askEveryTime: boolean; // 辞書で「毎回選ぶ」にした書き方
 };
 
+// 表記揺れ辞書の1件(oil_aliases)
+export type OilAlias = { alias_key: string; alias: string; oil_id: string | null; ask_every_time: boolean };
+
 // AI の下書きを、処方の入力欄の初期値に変える
-// 精油は、登録済みの精油の名前と「ならした形」がぴったり同じときだけ選んでおく。それ以外は空(=不明)
+// 精油を選んでおく順番:① 表記揺れ辞書(ひろみが覚えさせた書き方。AI より優先:08)
+//                     ② 登録した精油の名前と「ならした形」がぴったり同じ
+//                     ③ どちらもなければ空(=不明)。ひろみが一覧から選ぶ
 export function draftToFormInput(
   draft: DraftFormula,
   oils: { id: string; name: string }[],
+  aliases: OilAlias[] = [],
 ): { lines: LineInput[]; hints: LineHint[] } {
+  const dict = new Map(aliases.map((a) => [a.alias_key, a]));
+  const oilIds = new Set(oils.map((o) => o.id));
   const byName = new Map<string, string[]>();
   for (const o of oils) {
     const k = normalizeName(o.name);
@@ -162,10 +176,22 @@ export function draftToFormInput(
   const lines: LineInput[] = [];
   const hints: LineHint[] = [];
   for (const l of draft.lines) {
-    const matched = byName.get(normalizeName(l.name)) ?? [];
+    const key = normalizeName(l.name);
+    const alias = dict.get(key);
+    const byNameIds = byName.get(key) ?? [];
+    let oilId = "";
+    let matchedBy: MatchedBy = "";
+    if (alias && !alias.ask_every_time && alias.oil_id && oilIds.has(alias.oil_id)) {
+      oilId = alias.oil_id;
+      matchedBy = "dictionary";
+    } else if (!alias?.ask_every_time && byNameIds.length === 1) {
+      oilId = byNameIds[0];
+      matchedBy = "name";
+    }
     const amount = parseAmount(l.amount);
     const flags: string[] = [];
-    if (matched.length !== 1) flags.push("精油が不明:一覧から選んでください");
+    if (alias?.ask_every_time) flags.push(`「${alias.alias}」は毎回選ぶ書き方:どの精油か選んでください`);
+    else if (!oilId) flags.push("精油が不明:一覧から選んでください");
     if (amount === null) flags.push(l.amount ? `数字を読み取れない(「${l.amount}」)` : "数字が読めない");
     if (l.unclear) flags.push("AI の読み取りに自信がない");
     if (l.rewritten) flags.push("書き直しの跡あり:最終の値か確かめてください");
@@ -178,12 +204,20 @@ export function draftToFormInput(
     if (l.note) flags.push(`AI のメモ:${l.note}`);
 
     lines.push({
-      oil_id: matched.length === 1 ? matched[0] : "",
+      oil_id: oilId,
       amount: amount === null ? "" : String(amount),
       dilution_pct: "10",
       note_group: l.group_no !== null ? (gmap[l.group_no] ?? "") : "",
     });
-    hints.push({ written: l.name, flags });
+    hints.push({
+      written: l.name,
+      flags,
+      matchedBy,
+      initialOilId: oilId,
+      // 名前がぴったり同じなら、覚えなくても次も結びつく。毎回選ぶ書き方は、覚え直さない
+      rememberDefault: matchedBy !== "name" && !alias?.ask_every_time,
+      askEveryTime: !!alias?.ask_every_time,
+    });
   }
   return { lines, hints };
 }
@@ -222,4 +256,13 @@ export function checkSubtotals(draft: DraftFormula): SubtotalCheck[] {
 
 // 保存したときの配合行(人が直したあと)。written=ノートでの書き方(手で足した行は null)
 // AI の下書きと見比べて「人が直した行の数」を数える材料にする(R17・Evals)
-export type FinalLine = { oil_id: string; amount: number; dilution_pct: number; note_group: string; written: string | null };
+export type FinalLine = {
+  oil_id: string;
+  amount: number;
+  dilution_pct: number;
+  note_group: string;
+  written: string | null;
+  matched_by: MatchedBy; // 最初に精油を選んでおいた理由
+  initial_oil_id: string | null; // 最初に選んでおいた精油(oil_id と違えば、人が直した)
+  remembered: boolean; // 辞書に覚えたか
+};

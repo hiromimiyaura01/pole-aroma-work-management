@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fail, formulaFields } from "@/lib/formula-input";
 import { PROMPT_VERSION, readerModel, readNotePhoto } from "@/lib/reader";
-import type { FinalLine } from "@/lib/readings";
+import { normalizeName, type FinalLine, type MatchedBy } from "@/lib/readings";
 
 const BUCKET = "note-photos";
 const UUID_RE = /^[0-9a-f-]{36}$/;
@@ -118,6 +118,9 @@ export async function saveReading(formData: FormData) {
   const back = `/formulas/readings/${id}`;
   const f = formulaFields(formData, `${back}?pick=${picked}`);
   const written = formData.getAll("written").map(String);
+  const remember = formData.getAll("remember").map(String);
+  const matchedBy = formData.getAll("matched_by").map(String);
+  const initialOil = formData.getAll("initial_oil_id").map(String);
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -134,7 +137,23 @@ export async function saveReading(formData: FormData) {
   const saved = data as { saved_id: string; created: boolean };
 
   if (saved.created) {
-    const finalLines: FinalLine[] = f.lines.map((l, i) => ({ ...l, written: written[i] || null }));
+    const finalLines: FinalLine[] = f.lines.map((l, i) => ({
+      ...l,
+      written: written[i] || null,
+      matched_by: (["dictionary", "name"].includes(matchedBy[i]) ? matchedBy[i] : "") as MatchedBy,
+      initial_oil_id: initialOil[i] || null,
+      remembered: remember[i] === "1" && !!written[i],
+    }));
+
+    // 「この書き方を覚える」の行を、表記揺れ辞書に入れる(R6)
+    const items = finalLines
+      .filter((l) => l.remembered && l.written && normalizeName(l.written))
+      .map((l) => ({ alias_key: normalizeName(l.written!), alias: l.written, oil_id: l.oil_id }));
+    let aliasError: string | null = null;
+    if (items.length > 0) {
+      const { error: rememberError } = await supabase.rpc("remember_oil_aliases", { p_items: items });
+      if (rememberError) aliasError = rememberError.message;
+    }
     const { error: upError } = await supabase
       .from("formula_readings")
       .update({
@@ -145,9 +164,14 @@ export async function saveReading(formData: FormData) {
         saved_at: new Date().toISOString(),
       })
       .eq("id", id);
-    if (upError) {
+    if (upError || aliasError) {
       revalidatePath("/formulas");
-      fail(`/formulas/${saved.saved_id}`, `処方は保存しましたが、読み取りの記録を更新できませんでした:${upError.message}`);
+      fail(
+        `/formulas/${saved.saved_id}`,
+        upError
+          ? `処方は保存しましたが、読み取りの記録を更新できませんでした:${upError.message}`
+          : `処方は保存しましたが、書き方を辞書に覚えられませんでした:${aliasError}`,
+      );
     }
   }
 

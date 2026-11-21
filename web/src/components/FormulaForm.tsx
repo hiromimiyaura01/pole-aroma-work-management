@@ -7,7 +7,7 @@ import { Field, inputClass, buttonClass, subButtonClass } from "./ui";
 import { SubmitButton } from "./SubmitButton";
 
 type OilOption = { id: string; name: string };
-type Line = LineInput & { key: number; hint?: LineHint };
+type Line = LineInput & { key: number; hint?: LineHint; remember?: boolean };
 
 const emptyLine = (key: number): Line => ({
   key,
@@ -41,7 +41,7 @@ export function FormulaForm({
   // key は、行を見分けるための通し番号(行を消しても、ほかの行の入力がずれないようにする)
   const [lines, setLines] = useState<Line[]>(() =>
     defaults.lines.length > 0
-      ? defaults.lines.map((l, i) => ({ ...l, key: i, hint: hints?.[i] }))
+      ? defaults.lines.map((l, i) => ({ ...l, key: i, hint: hints?.[i], remember: hints?.[i]?.rememberDefault }))
       : [emptyLine(0), emptyLine(1), emptyLine(2)],
   );
   const addLine = () => setLines((prev) => [...prev, emptyLine(Math.max(-1, ...prev.map((l) => l.key)) + 1)]);
@@ -94,12 +94,18 @@ export function FormulaForm({
             }`}
           >
             <input type="hidden" name="written" value={l.hint?.written ?? ""} />
+            <input type="hidden" name="remember" value={l.hint && l.remember ? "1" : "0"} />
+            <input type="hidden" name="matched_by" value={l.hint?.matchedBy ?? ""} />
+            <input type="hidden" name="initial_oil_id" value={l.hint?.initialOilId ?? ""} />
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 {i + 1}行目
                 {l.hint && (
                   <span className="ml-2 text-gray-800 dark:text-gray-100">
                     ノートの書き方:<strong>{l.hint.written}</strong>
+                    {l.hint.matchedBy === "dictionary" && l.oil_id === l.hint.initialOilId && (
+                      <span className="ml-1 text-gray-500">(辞書で結びつけた)</span>
+                    )}
                   </span>
                 )}
               </span>
@@ -135,6 +141,16 @@ export function FormulaForm({
                 </option>
               ))}
             </select>
+            {l.hint && l.hint.written && !l.hint.askEveryTime && (
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={!!l.remember}
+                  onChange={(e) => setLines((prev) => prev.map((x) => (x.key === l.key ? { ...x, remember: e.target.checked } : x)))}
+                />
+                「{l.hint.written}」をこの精油として覚える
+              </label>
+            )}
             <div className="flex gap-2">
               <input
                 name="amount"

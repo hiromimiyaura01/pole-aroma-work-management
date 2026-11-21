@@ -84,3 +84,14 @@ select 'formula_readings', count(*)::text from public.formula_readings;
 ```
 - 写真は Supabase の左メニュー **Storage → note-photos** でも見られる(ログインした人だけ)。
 - AI の下書き(`draft`)と、人が保存した配合行(`final_lines`)の両方が残る。あとで Evals(R16)と、直した行の数(R17)に使う。
+
+## 表記揺れ辞書(R6)(2026-11-21)
+
+1. `migrations/20261121000001_oil_aliases.sql`(ノートでの書き方 → 精油 の辞書の表と、保存のときにまとめて覚える関数)
+2. 確認:次の SQL を Run。期待:`oil_aliases | 0`(はじめは空)
+
+```sql
+select 'oil_aliases' as name, count(*) from public.oil_aliases;
+```
+- 写真の確認画面で保存すると、「この書き方を覚える」がオンの行がここに入る。中身はアプリの「精油 → 書き方の辞書」で見て、直す・消すができる。
+- 実行する前でも、写真の読み取りは今までどおり動く(辞書が空として動く。保存のときに「辞書に覚えられませんでした」と出る)。

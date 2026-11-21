@@ -8,6 +8,7 @@ import {
   checkSubtotals,
   draftToFormInput,
   type Draft,
+  type OilAlias,
   type ReadingStatus,
 } from "@/lib/readings";
 import { FormulaForm } from "@/components/FormulaForm";
@@ -38,6 +39,8 @@ async function ReadingDetail({ params, searchParams }: PageProps<"/formulas/read
   const target = formulas[pick];
 
   const { data: oils } = await supabase.from("essential_oils").select("id, name").order("name");
+  // 表記揺れ辞書(表がまだないときは、空として動く)
+  const { data: aliases } = await supabase.from("oil_aliases").select("alias_key, alias, oil_id, ask_every_time");
 
   // ノートに不変 ID が書かれていて、その処方がもう登録されているか
   let existingId: string | null = null;
@@ -124,6 +127,7 @@ async function ReadingDetail({ params, searchParams }: PageProps<"/formulas/read
               key={pick}
               target={target}
               oils={oils ?? []}
+              aliases={(aliases ?? []) as OilAlias[]}
               hidden={hidden}
               existingId={existingId}
               writtenId={writtenId}
@@ -148,17 +152,20 @@ async function ReadingDetail({ params, searchParams }: PageProps<"/formulas/read
 function ConfirmForm({
   target,
   oils,
+  aliases,
   hidden,
   existingId,
   writtenId,
 }: {
   target: Draft["formulas"][number];
   oils: { id: string; name: string }[];
+  aliases: OilAlias[];
   hidden: Record<string, string>;
   existingId: string | null;
   writtenId: string | null;
 }) {
-  const { lines, hints } = draftToFormInput(target, oils);
+  const { lines, hints } = draftToFormInput(target, oils, aliases);
+  const nUnknown = hints.filter((h) => !h.initialOilId).length;
   const checks = checkSubtotals(target);
   const nFlagged = hints.filter((h) => h.flags.length > 0).length;
 
@@ -203,6 +210,17 @@ function ConfirmForm({
       <p className="text-xs text-gray-500">
         グループ(トップ/ミドル/ベース)は、ノートのかっこの横に書いた名前(top・middle・base など)から入れています。名前がないときは、かっこの上からの順で仮に入れています。
       </p>
+
+      {nUnknown > 0 && (
+        <p className="text-xs text-gray-600 dark:text-gray-300">
+          一覧にない精油は、先に{" "}
+          <a href="/oils/new" target="_blank" rel="noreferrer" className="underline">
+            精油を登録
+          </a>
+          (別のタブで開きます)してから、この画面を読み込み直してください(読み込み直すと、この画面で直した内容は消えます)。
+          選んだ精油は「この書き方を覚える」で辞書に入り、次の読み取りから自動で結びつきます。
+        </p>
+      )}
 
       <FormulaForm
         oils={oils}
