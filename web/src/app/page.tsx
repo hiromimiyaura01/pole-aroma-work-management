@@ -35,6 +35,9 @@ export default function Home() {
         <Link href="/oils" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
           精油の一覧・登録 →
         </Link>
+        <Link href="/evals" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
+          読み取りの精度(Evals)→
+        </Link>
       </nav>
       <p className="text-sm text-gray-500">
         確認の結果は参考情報です。最終的な判断は、事業者が行います。

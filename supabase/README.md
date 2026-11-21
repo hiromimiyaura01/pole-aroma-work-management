@@ -95,3 +95,21 @@ select 'oil_aliases' as name, count(*) from public.oil_aliases;
 ```
 - 写真の確認画面で保存すると、「この書き方を覚える」がオンの行がここに入る。中身はアプリの「精油 → 書き方の辞書」で見て、直す・消すができる。
 - 実行する前でも、写真の読み取りは今までどおり動く(辞書が空として動く。保存のときに「辞書に覚えられませんでした」と出る)。
+
+## Evals(R16)(2026-11-21)
+
+1. `migrations/20261121000002_evals.sql`(正解から外す印、採点の表 `eval_runs`・`eval_results`、まとめのビュー `eval_run_summary`)
+2. 確認:次の SQL を Run。期待:`eval_runs | 0`(はじめは空)
+
+```sql
+select 'eval_runs' as name, count(*) from public.eval_runs;
+```
+- 採点はアプリの「読み取りの精度(Evals)」の画面から動かす。結果は `eval_run_summary` で、SQL Editor や Looker Studio からも見られる。
+- モデルどうしを比べる SQL の例(同じボタンで一緒に採点したもの=同じ `batch_id`):
+
+```sql
+select model, prompt_version, amount_accuracy, group_accuracy, avg_duration_ms, avg_cost_usd
+from public.eval_run_summary
+where batch_id = (select batch_id from public.eval_runs order by created_at desc limit 1)
+order by amount_accuracy desc, avg_cost_usd;
+```
