@@ -12,7 +12,23 @@ export function readerModel(): string {
   return (process.env.CLAUDE_MODEL ?? "").trim() || "claude-opus-5-5";
 }
 
-function readerEffort(): "low" | "medium" | "high" {
+export type Effort = "low" | "medium" | "high";
+
+// Evals(R16)で比べるモデル。料金は 1M トークンあたりのドル(Claude API の一覧表。確認日 2026-11-21)
+// Haiku 5.5 の料金は、入力が 100K トークンまでのとき(写真1枚なら収まる)
+export const EVAL_MODELS: Record<string, { label: string; inUsd: number; outUsd: number; fallback: boolean }> = {
+  "claude-opus-5-5": { label: "Opus 5.5", inUsd: 4, outUsd: 20, fallback: true },
+  "claude-sonnet-5-5": { label: "Sonnet 5.5", inUsd: 2, outUsd: 10, fallback: true },
+  "claude-haiku-5-5": { label: "Haiku 5.5", inUsd: 0.1, outUsd: 0.5, fallback: false }, // Haiku は、断られたときの振り分けに対応していない
+};
+
+export function costUsd(model: string, inputTokens: number, outputTokens: number): number | null {
+  const m = EVAL_MODELS[model];
+  if (!m) return null;
+  return (inputTokens * m.inUsd + outputTokens * m.outUsd) / 1_000_000;
+}
+
+export function readerEffort(): Effort {
   const v = (process.env.CLAUDE_EFFORT ?? "").trim();
   return v === "low" || v === "high" ? v : "medium";
 }
@@ -44,8 +60,14 @@ export type ReadResult =
   | { ok: true; draft: Draft; model: string; inputTokens: number; outputTokens: number; durationMs: number }
   | { ok: false; error: string; model: string; durationMs: number };
 
-export async function readNotePhoto(image: { base64: string; mediaType: "image/jpeg" | "image/png" | "image/webp" }): Promise<ReadResult> {
-  const model = readerModel();
+// opts を渡さなければ、ふだんの読み取りの設定(環境変数)を使う。Evals では、比べるモデルを渡す
+export async function readNotePhoto(
+  image: { base64: string; mediaType: "image/jpeg" | "image/png" | "image/webp" },
+  opts: { model?: string; effort?: Effort } = {},
+): Promise<ReadResult> {
+  const model = opts.model ?? readerModel();
+  const effort = opts.effort ?? readerEffort();
+  const useFallback = EVAL_MODELS[model]?.fallback ?? true;
   const started = Date.now();
   const elapsed = () => Date.now() - started;
 
@@ -61,10 +83,9 @@ export async function readNotePhoto(image: { base64: string; mediaType: "image/j
       model,
       max_tokens: 16000,
       // 安全のための判定で断られたとき、同じ依頼を別のモデルで続けてもらう(既定の振り分け)
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      ...(useFallback ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       output_config: {
-        effort: readerEffort(),
+        effort,
         format: { type: "json_schema", schema: DRAFT_SCHEMA },
       },
       system: SYSTEM_PROMPT,
