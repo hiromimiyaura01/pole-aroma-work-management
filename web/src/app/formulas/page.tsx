@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AMENDMENT } from "@/lib/oils";
 import { type FormulaStatus } from "@/lib/formulas";
-import { Badge, buttonClass } from "@/components/ui";
+import { Badge, buttonClass, subButtonClass } from "@/components/ui";
 
 function StatusBadges({ f }: { f: FormulaStatus }) {
   const clean = f.n_red + f.n_yellow + f.n_near + f.n_unconfirmed + f.n_needs_review === 0;
@@ -63,9 +63,14 @@ export default function FormulasPage() {
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">処方</h1>
-        <Link href="/formulas/new" className={buttonClass}>
-          + 登録
-        </Link>
+        <span className="flex gap-2">
+          <Link href="/formulas/readings" className={buttonClass}>
+            写真から登録
+          </Link>
+          <Link href="/formulas/new" className={subButtonClass}>
+            + 手で入れる
+          </Link>
+        </span>
       </div>
       <Suspense fallback={<p className="text-sm text-gray-500">読み込み中…</p>}>
         <FormulaList />

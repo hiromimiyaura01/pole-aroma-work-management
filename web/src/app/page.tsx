@@ -26,6 +26,9 @@ export default function Home() {
       <h1 className="text-2xl font-bold">POLE AROMA 処方ノート</h1>
       <p>処方の記録と、IFRA の上限の確認を補助する道具です。</p>
       <nav className="flex flex-col gap-2">
+        <Link href="/formulas/readings" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
+          ノートの写真から処方を登録する →
+        </Link>
         <Link href="/formulas" className="rounded border border-gray-300 px-4 py-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-900">
           処方の一覧・登録・IFRA の確認 →
         </Link>
