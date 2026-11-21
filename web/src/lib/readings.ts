@@ -9,7 +9,8 @@ import type { LineInput } from "./formulas";
 export type DraftLine = {
   name: string; // ノートに書かれたとおりの名前(略称・誤字もそのまま)
   amount: string | null; // ノートに書かれたとおりの数字。読めないときは null
-  group_no: number | null; // 中かっこのグループの番号(上から 1, 2, 3…)。グループの外なら null
+  group_no: number | null; // かっこのグループの番号(上から 1, 2, 3…)。グループの外なら null
+  group_label: string | null; // そのグループのかっこの横に書かれた名前(例:top・middle・base)。書かれたとおり。なければ null
   outside_group: boolean; // かっこの外に書かれている(処方に入るか分からない)
   unclear: boolean; // 読み取りに自信がない(名前か数字)
   rewritten: boolean; // 線で消して書き直した跡がある
@@ -52,11 +53,12 @@ export const DRAFT_SCHEMA: Record<string, unknown> = {
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["name", "amount", "group_no", "outside_group", "unclear", "rewritten", "note"],
+              required: ["name", "amount", "group_no", "group_label", "outside_group", "unclear", "rewritten", "note"],
               properties: {
                 name: { type: "string" },
                 amount: nullable({ type: "string" }),
                 group_no: nullable({ type: "integer" }),
+                group_label: nullable({ type: "string" }),
                 outside_group: { type: "boolean" },
                 unclear: { type: "boolean" },
                 rewritten: { type: "boolean" },
@@ -109,16 +111,34 @@ export function parseAmount(s: string | null | undefined): number | null {
 
 // 名前の見比べ用:全角半角・大文字小文字・空白・点の違いをならす
 export function normalizeName(s: string): string {
-  return s.normalize("NFKC").toLowerCase().replace(/[\s.・、。,_\-]/g, "");
+  // かっこの記号({ } ( ) [ ] 「 」など)も外す。かっこが名前の一部として読まれても結びつくように
+  return s.normalize("NFKC").toLowerCase().replace(/[\s.・、。,_\-{}()\[\]「」『』【】〔〕<>|]/g, "");
 }
 
-// 中かっこの番号を、トップ/ミドル/ベースに置き換える(上から順に。3つ以下のときだけ)
-// 【推測】ノートのかっこは上からトップ→ミドル→ベースの順。違うときは確認画面で直す
-function groupMap(draft: DraftFormula): Record<number, string> {
+// かっこの横に書かれた名前を、トップ/ミドル/ベースに読みかえる(読めなければ null)
+export function labelToGroup(label: string | null | undefined): "top" | "middle" | "base" | null {
+  if (!label) return null;
+  const t = label.normalize("NFKC").toLowerCase().replace(/[\s.:]/g, "");
+  if (/^(top|t|トップ|とっぷ)(note)?$/.test(t)) return "top";
+  if (/^(middle|mid|m|ミドル|みどる|heart|ハート)(note)?$/.test(t)) return "middle";
+  if (/^(base|b|ベース|べーす|bottom|ラスト|last)(note)?$/.test(t)) return "base";
+  return null;
+}
+
+// かっこの番号 → トップ/ミドル/ベース
+// 1. かっこの横に名前(top・middle・base など)が書かれていれば、それを使う
+// 2. どのグループにも名前がないときだけ、上からの順で仮に入れる(3つ以下のとき)
+//    【推測】順で入れるのは当て推量。名前がないときは、確認画面で必ず見てもらう
+function groupMap(draft: DraftFormula): { map: Record<number, string>; byOrder: boolean } {
   const nos = [...new Set(draft.lines.map((l) => l.group_no).filter((n): n is number => n !== null))].sort((a, b) => a - b);
-  if (nos.length === 0 || nos.length > 3) return {};
+  const labelOf = (n: number) =>
+    labelToGroup(draft.lines.find((l) => l.group_no === n && labelToGroup(l.group_label))?.group_label) ??
+    labelToGroup(draft.subtotals.find((x) => x.group_no === n)?.group_label);
+  const labeled = Object.fromEntries(nos.map((n) => [n, labelOf(n)]).filter(([, g]) => g)) as Record<number, string>;
+  if (Object.keys(labeled).length > 0) return { map: labeled, byOrder: false };
+  if (nos.length === 0 || nos.length > 3) return { map: {}, byOrder: false };
   const names = nos.length === 1 ? ["middle"] : nos.length === 2 ? ["top", "base"] : ["top", "middle", "base"];
-  return Object.fromEntries(nos.map((n, i) => [n, names[i]]));
+  return { map: Object.fromEntries(nos.map((n, i) => [n, names[i]])), byOrder: true };
 }
 
 export type LineHint = {
@@ -137,7 +157,7 @@ export function draftToFormInput(
     const k = normalizeName(o.name);
     byName.set(k, [...(byName.get(k) ?? []), o.id]);
   }
-  const gmap = groupMap(draft);
+  const { map: gmap, byOrder } = groupMap(draft);
 
   const lines: LineInput[] = [];
   const hints: LineHint[] = [];
@@ -150,6 +170,11 @@ export function draftToFormInput(
     if (l.unclear) flags.push("AI の読み取りに自信がない");
     if (l.rewritten) flags.push("書き直しの跡あり:最終の値か確かめてください");
     if (l.outside_group) flags.push("かっこの外の記載:処方に入れるか決めてください");
+    if (l.group_no !== null && !gmap[l.group_no]) {
+      flags.push(`グループが分からない${l.group_label ? `(ノートの書き方「${l.group_label}」)` : ""}:選んでください`);
+    } else if (l.group_no !== null && byOrder) {
+      flags.push("グループはかっこの順で仮に入れた:合っているか見てください");
+    }
     if (l.note) flags.push(`AI のメモ:${l.note}`);
 
     lines.push({
@@ -172,7 +197,7 @@ export type SubtotalCheck = {
 
 // ノートの小計・合計と、読み取った配合行の合計を見比べる(AI の答えではなく計算で)
 export function checkSubtotals(draft: DraftFormula): SubtotalCheck[] {
-  const gmap = groupMap(draft);
+  const { map: gmap } = groupMap(draft);
   const sumOf = (rows: DraftLine[]) => rows.reduce((t, l) => t + (parseAmount(l.amount) ?? 0), 0);
   const round = (n: number) => Number(n.toFixed(4));
   const checks: SubtotalCheck[] = draft.subtotals.map((s) => {

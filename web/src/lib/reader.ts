@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { DRAFT_SCHEMA, type Draft } from "./readings";
 
 // 指示文の版。指示文(SYSTEM_PROMPT)を変えたら上げる(Evals で、どの版の結果かを見分けるため)
-export const PROMPT_VERSION = "2026-11-15.1";
+export const PROMPT_VERSION = "2026-11-21.1";
 
 // モデルは Evals(R16)で比べて決める(10 の T5)。それまでは環境変数で切り替えられるようにしておく
 export function readerModel(): string {
@@ -25,7 +25,11 @@ const SYSTEM_PROMPT = `あなたは、アロマ・フレグランスの作り手
 - 不変 ID として「P」と5桁の数字(例:P00042)が書かれていることがある。あれば formula_id に入れる。なければ null。
 - 1行に「精油の名前」と「数字」が書かれる。数字に単位はない(比率)。
 - 精油の名前は略称・英語・カタカナが混ざる(例:「O.S」「Eremi」「Cederwood. V」「ホーウッド」)。書かれたとおりに写す。正式名に直さない。
-- 中かっこ { で行をグループに分け、横に小計を書くことがある。グループは上から 1, 2, 3… と番号をつけて group_no に入れる。かっこの外の行は group_no を null にし、outside_group を true にする。
+- 精油の名前の **左側** を、縦に長いかっこ({ や ( )でまとめて、グループに分けることが多い。かっこの外側(さらに左)に、そのグループの名前を英語で書く(例:top、middle、base)。
+  - グループは上から 1, 2, 3… と番号をつけて group_no に入れる。かっこの横に書かれたグループの名前は、そのグループのすべての行の group_label に、書かれたとおりに入れる(top を middle にするなど、言いかえない)。名前が書かれていなければ null。
+  - かっこの記号そのものは、精油の名前ではない。name に {、(、| などを含めない。
+  - グループの横(右側など)に小計を書くことがある。
+  - かっこの外の行は group_no を null にし、outside_group を true にする。
 - 線で消して書き直した数字がある。最終の値が読み取れるならその値を入れ、rewritten を true にする。どちらが最終か分からないときは amount を null にし、unclear を true にする。
 
 ## 守ること
